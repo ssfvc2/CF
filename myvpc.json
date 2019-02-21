@@ -1,0 +1,264 @@
+{
+
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "create my vpc",
+
+  
+    "Parameters": {
+
+        
+        "publicAZ": {
+            "Description": "publicAZ",
+            "Type": "AWS::EC2::AvailabilityZone::Name",
+            "Default": "us-east-1a"
+        },
+        
+        
+        
+        "privateAZ": {
+            "Description": "privateAZ",
+            "Type": "AWS::EC2::AvailabilityZone::Name"
+        },
+
+        
+        
+        
+        "mykey": {
+            "Description": "-",
+            "Type": "AWS::EC2::KeyPair::KeyName"
+        },
+        
+                
+        
+        "myimage": {
+            "Description": "myimage",
+            "Type": "AWS::EC2::Image::Id",
+            "Default": "ami-05a36d3b9aa4a17ac"
+        },
+                
+        "instype": {
+            "Description": "instype",
+            "Type": "String",
+            "Default": "t2.micro"
+        }
+        
+        
+      
+    },
+
+    
+    "Resources": {
+        
+        "myvpc": {
+          "Type": "AWS::EC2::VPC",
+          "Properties": {
+            "CidrBlock": "10.10.0.0/16"
+          }
+        },
+
+        
+        "myIGW": {
+          "Type": "AWS::EC2::InternetGateway",
+          "Properties": {
+           
+          }
+        },
+        "AttachGateway": {
+          "Type": "AWS::EC2::VPCGatewayAttachment",
+          "Properties": {
+            "VpcId": 
+            { "Ref": "myvpc" }
+            ,
+            "InternetGatewayId": { "Ref": "myIGW" }
+          }
+        },
+
+
+        
+        "publicsubnet": {
+          "Type": "AWS::EC2::Subnet",
+          "Properties": {
+            "AvailabilityZone": 
+            { "Ref": "publicAZ" }
+            ,
+            "VpcId": 
+            { "Ref": "myvpc" }
+            ,
+            "CidrBlock": "10.10.1.0/24"
+          }
+        },
+
+
+        
+        "privatesubnet": {
+          "Type": "AWS::EC2::Subnet",
+          "Properties": {
+            "AvailabilityZone": 
+            { "Ref": "privateAZ" }
+            ,
+            "VpcId": 
+            { "Ref": "myvpc" }
+            ,
+            "CidrBlock": "10.10.2.0/24"
+          }
+        },
+
+
+        
+        "publicRT": {
+          "Type": "AWS::EC2::RouteTable",
+          "Properties": {
+            "VpcId": 
+            { "Ref": "myvpc" }
+             }
+        },
+
+
+        
+        "publicroute": {
+          "Type": "AWS::EC2::Route",
+          "Properties": {
+            "RouteTableId": 
+            { "Ref": "publicRT" }
+            ,
+            "DestinationCidrBlock": "0.0.0.0/0",
+            "GatewayId": 
+            { "Ref": "myIGW" }
+            
+          }
+        },
+
+        
+        "publicrouteTableAssoc": {
+          "Type": "AWS::EC2::SubnetRouteTableAssociation",
+          "Properties": {
+            "SubnetId": 
+            { "Ref": "publicsubnet" }
+            ,
+            "RouteTableId": 
+            { "Ref": "publicRT" }
+            
+          }
+        },
+        
+        
+        "privateRT": {
+          "Type": "AWS::EC2::RouteTable",
+          "Properties": {
+            "VpcId": 
+            { "Ref": "myvpc" }
+            
+          }
+        },
+
+
+        
+        "privaterouteTableAssoc": {
+          "Type": "AWS::EC2::SubnetRouteTableAssociation",
+          "Properties": {
+            "SubnetId": 
+            { "Ref": "privatesubnet" }
+            ,
+            "RouteTableId": 
+            { "Ref": "privateRT" }
+            
+          }
+        },
+
+
+        "myEIP" : {
+          "Type" : "AWS::EC2::EIP"      
+         },
+        
+        "myNAT" : {
+          "Type" : "AWS::EC2::NatGateway",
+          "Properties" : {
+            "AllocationId" : { "Fn::GetAtt" : ["myEIP", "AllocationId"]},
+            "SubnetId" : { "Ref" : "publicsubnet"}
+            
+          }
+        },
+
+
+        "privateroute": {
+          "Type": "AWS::EC2::Route",
+          "Properties": {
+            "RouteTableId": 
+            { "Ref": "privateRT" }
+            ,
+            "DestinationCidrBlock": "0.0.0.0/0",
+            "NatGatewayId" : { "Ref" : "myNAT" }
+          }
+        },
+        
+        
+       
+        
+      
+      "mysGroup" : {
+        "Type" : "AWS::EC2::SecurityGroup",
+        "Properties" : {
+          "GroupDescription" : "-",
+          "VpcId" : 
+          { "Ref": "myvpc" },
+          "SecurityGroupIngress" : [ 
+            { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" },
+            { "IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : "0.0.0.0/0" }
+          ]
+          
+          
+        }
+      },
+      
+                
+      
+      "myins": {
+          "Type": "AWS::EC2::Instance",
+          "Properties": {
+              "KeyName": 
+              { "Ref": "mykey" }
+               ,
+              "ImageId": 
+              { "Ref": "myimage" }
+              ,
+              "InstanceType": 
+              { "Ref": "instype" }
+              ,
+             "SecurityGroupIds" : [
+              { "Ref": "mysGroup" }
+              ],
+              "SubnetId" : 
+              { "Ref": "publicsubnet" }
+              ,
+              "Tags": [
+                  {
+                      "Key": "name",
+                      "Value": "myinstance"
+                  }
+              ]
+   
+      }
+              }
+        
+        
+        
+        
+    },
+
+
+    
+    "Outputs" : {
+     
+
+
+      
+      "myvpc" : {
+        "Value" : 
+        { "Ref": "myvpc" }
+        
+      }
+      
+    }
+    
+
+}
