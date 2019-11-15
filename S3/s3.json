@@ -1,0 +1,64 @@
+{
+
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "creating s3Bucket",
+
+
+   "Parameters" : {
+
+    
+    "mys3bucket": {
+        "Description": "my s3 bucket",
+        "Type": "String"
+       
+    }
+    
+
+
+   },
+    
+   "Resources": {
+
+    
+    "s3Bucket": {
+        "Type": "AWS::S3::Bucket",
+        "Properties": {
+            "AccessControl": "PublicRead",
+            "BucketName": 
+            { "Ref": "mys3bucket" }
+            ,
+            "VersioningConfiguration" :{
+                "Status" : "Enabled"
+            },
+            "WebsiteConfiguration" :
+            {
+                "ErrorDocument" : "error.html",
+                "IndexDocument" : "index.html"
+               
+              }
+
+
+        }
+    }
+    
+
+
+   },
+
+   "Outputs":{
+
+    
+    "mybucketname" : {
+      "Value" : 
+      { "Ref": "s3Bucket" }
+      
+    }
+    
+
+   }
+
+
+
+
+
+}
